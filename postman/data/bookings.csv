@@ -1,0 +1,6 @@
+firstname,lastname,totalprice,depositpaid,checkin,checkout,additionalneeds
+Ada,Lovelace,120,true,2026-01-01,2026-01-05,Breakfast
+Grace,Hopper,0,false,2026-02-10,2026-02-11,
+Katherine,Johnson,999999,true,2026-03-01,2026-03-01,Late checkout
+Margaret,Hamilton,250,true,2026-04-01,2026-04-30,Airport transfer
+Annie,Easley,75,false,2026-05-05,2026-05-06,

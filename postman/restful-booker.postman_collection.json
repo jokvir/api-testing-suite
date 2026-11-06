@@ -1,0 +1,751 @@
+{
+  "info": {
+    "_postman_id": "2337f1a5-fe2a-4b4d-b970-3a8597b15651",
+    "name": "Restful Booker",
+    "description": "Exploratory and regression checks for the Restful Booker API. The base URL and the credentials come from the environment, so the same collection runs against the local container and the public instance. Run it with the bookings.csv data file to exercise several payloads in one go.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// One token per run, fetched lazily so any request can also be sent on its own.",
+          "if (!pm.collectionVariables.get('token')) {",
+          "  pm.sendRequest(",
+          "    {",
+          "      url: pm.environment.get('baseUrl') + '/auth',",
+          "      method: 'POST',",
+          "      header: { 'Content-Type': 'application/json' },",
+          "      body: {",
+          "        mode: 'raw',",
+          "        raw: JSON.stringify({",
+          "          username: pm.environment.get('username'),",
+          "          password: pm.environment.get('password'),",
+          "        }),",
+          "      },",
+          "    },",
+          "    function (error, response) {",
+          "      if (error) { throw error; }",
+          "      pm.collectionVariables.set('token', response.json().token);",
+          "    },",
+          "  );",
+          "}"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "bookingid",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "booking",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "updatedBooking",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "firstname",
+      "value": "Ada",
+      "type": "string"
+    },
+    {
+      "key": "lastname",
+      "value": "Lovelace",
+      "type": "string"
+    },
+    {
+      "key": "totalprice",
+      "value": "120",
+      "type": "string"
+    },
+    {
+      "key": "depositpaid",
+      "value": "true",
+      "type": "string"
+    },
+    {
+      "key": "checkin",
+      "value": "2026-01-01",
+      "type": "string"
+    },
+    {
+      "key": "checkout",
+      "value": "2026-01-05",
+      "type": "string"
+    },
+    {
+      "key": "additionalneeds",
+      "value": "Breakfast",
+      "type": "string"
+    },
+    {
+      "key": "authTokenSchema",
+      "value": "{\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"$id\": \"auth-token\",\n  \"title\": \"AuthToken\",\n  \"type\": \"object\",\n  \"additionalProperties\": false,\n  \"required\": [\"token\"],\n  \"properties\": {\n    \"token\": { \"type\": \"string\", \"pattern\": \"^[a-f0-9]{15}$\" }\n  }\n}",
+      "type": "string"
+    },
+    {
+      "key": "bookingSchema",
+      "value": "{\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"$id\": \"booking\",\n  \"title\": \"Booking\",\n  \"type\": \"object\",\n  \"additionalProperties\": false,\n  \"required\": [\"firstname\", \"lastname\", \"totalprice\", \"depositpaid\", \"bookingdates\"],\n  \"properties\": {\n    \"firstname\": { \"type\": \"string\", \"minLength\": 1 },\n    \"lastname\": { \"type\": \"string\", \"minLength\": 1 },\n    \"totalprice\": { \"type\": \"integer\", \"minimum\": 0 },\n    \"depositpaid\": { \"type\": \"boolean\" },\n    \"bookingdates\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"required\": [\"checkin\", \"checkout\"],\n      \"properties\": {\n        \"checkin\": { \"type\": \"string\", \"format\": \"date\" },\n        \"checkout\": { \"type\": \"string\", \"format\": \"date\" }\n      }\n    },\n    \"additionalneeds\": { \"type\": \"string\" }\n  }\n}",
+      "type": "string"
+    },
+    {
+      "key": "bookingIdsSchema",
+      "value": "{\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"$id\": \"booking-ids\",\n  \"title\": \"BookingIds\",\n  \"type\": \"array\",\n  \"items\": {\n    \"type\": \"object\",\n    \"additionalProperties\": false,\n    \"required\": [\"bookingid\"],\n    \"properties\": {\n      \"bookingid\": { \"type\": \"integer\", \"minimum\": 1 }\n    }\n  }\n}",
+      "type": "string"
+    },
+    {
+      "key": "createdBookingSchema",
+      "value": "{\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"$id\": \"created-booking\",\n  \"title\": \"CreatedBooking\",\n  \"type\": \"object\",\n  \"additionalProperties\": false,\n  \"required\": [\"bookingid\", \"booking\"],\n  \"properties\": {\n    \"bookingid\": { \"type\": \"integer\", \"minimum\": 1 },\n    \"booking\": { \"$ref\": \"booking\" }\n  }\n}",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health check",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responds 201 Created', function () {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('responds in plain text', function () {",
+                  "  pm.expect(pm.response.headers.get('Content-Type')).to.include('text/plain');",
+                  "});",
+                  "",
+                  "pm.test('responds within the budget', function () {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(",
+                  "    Number(pm.environment.get('responseBudgetMs')),",
+                  "  );",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ping",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ping"
+              ]
+            },
+            "description": "Confirms the API is reachable before anything else runs."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Create token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responds 200 OK', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('responds with JSON', function () {",
+                  "  pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+                  "});",
+                  "",
+                  "const schema = JSON.parse(pm.collectionVariables.get('authTokenSchema'));",
+                  "",
+                  "pm.test('matches the auth token schema', function () {",
+                  "  pm.response.to.have.jsonSchema(schema);",
+                  "});",
+                  "",
+                  "pm.test('responds within the budget', function () {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(",
+                  "    Number(pm.environment.get('responseBudgetMs')),",
+                  "  );",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{username}}\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth"
+              ]
+            },
+            "description": "Exchanges the demo credentials for a token."
+          }
+        },
+        {
+          "name": "Reject a wrong password",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('does not return a token', function () {",
+                  "  pm.expect(pm.response.json()).to.eql({ reason: 'Bad credentials' });",
+                  "});",
+                  "",
+                  "pm.test('known defect: answers 200 instead of 401 Unauthorized', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{username}}\",\n  \"password\": \"wrong-password\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth"
+              ]
+            },
+            "description": "The API answers 200 with a reason body instead of 401, so the assertion records the behaviour rather than the ideal."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Booking",
+      "description": "A full create-read-update-delete cycle. With bookings.csv the whole cycle runs once per row.",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// Built here rather than in the raw body so additionalneeds can be left out entirely",
+              "// when the data file has no value for it.",
+              "const booking = {",
+              "  firstname: pm.variables.get('firstname'),",
+              "  lastname: pm.variables.get('lastname'),",
+              "  totalprice: Number(pm.variables.get('totalprice')),",
+              "  depositpaid: pm.variables.get('depositpaid') === 'true',",
+              "  bookingdates: {",
+              "    checkin: pm.variables.get('checkin'),",
+              "    checkout: pm.variables.get('checkout'),",
+              "  },",
+              "};",
+              "",
+              "const extras = pm.variables.get('additionalneeds');",
+              "if (extras) {",
+              "  booking.additionalneeds = extras;",
+              "}",
+              "",
+              "pm.collectionVariables.set('booking', JSON.stringify(booking));"
+            ]
+          }
+        }
+      ],
+      "item": [
+        {
+          "name": "Create booking",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('bookingid', pm.response.json().bookingid);",
+                  "",
+                  "const sent = JSON.parse(pm.collectionVariables.get('booking'));",
+                  "const schema = JSON.parse(pm.collectionVariables.get('createdBookingSchema'));",
+                  "",
+                  "// Postman has no schema registry, so the one $ref is resolved here.",
+                  "schema.properties.booking = JSON.parse(pm.collectionVariables.get('bookingSchema'));",
+                  "",
+                  "pm.test('responds 200 OK', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('matches the created booking schema', function () {",
+                  "  pm.response.to.have.jsonSchema(schema);",
+                  "});",
+                  "",
+                  "pm.test('echoes the booking that was sent', function () {",
+                  "  pm.expect(pm.response.json().booking).to.eql(sent);",
+                  "});",
+                  "",
+                  "pm.test('responds within the budget', function () {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(",
+                  "    Number(pm.environment.get('responseBudgetMs')),",
+                  "  );",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{{booking}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/booking",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking"
+              ]
+            },
+            "description": "Creates the booking described by the current data row."
+          }
+        },
+        {
+          "name": "Get booking",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const sent = JSON.parse(pm.collectionVariables.get('booking'));",
+                  "const schema = JSON.parse(pm.collectionVariables.get('bookingSchema'));",
+                  "",
+                  "pm.test('responds 200 OK', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('matches the booking schema', function () {",
+                  "  pm.response.to.have.jsonSchema(schema);",
+                  "});",
+                  "",
+                  "pm.test('returns the booking that was created', function () {",
+                  "  pm.expect(pm.response.json()).to.eql(sent);",
+                  "});",
+                  "",
+                  "pm.test('responds within the budget', function () {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(",
+                  "    Number(pm.environment.get('responseBudgetMs')),",
+                  "  );",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking/{{bookingid}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking",
+                "{{bookingid}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Find booking by name",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const schema = JSON.parse(pm.collectionVariables.get('bookingIdsSchema'));",
+                  "",
+                  "pm.test('responds 200 OK', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('matches the booking ids schema', function () {",
+                  "  pm.response.to.have.jsonSchema(schema);",
+                  "});",
+                  "",
+                  "pm.test('finds the booking that was created', function () {",
+                  "  pm.expect(pm.response.json()).to.deep.include({",
+                  "    bookingid: Number(pm.collectionVariables.get('bookingid')),",
+                  "  });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking?firstname={{firstname}}&lastname={{lastname}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking"
+              ],
+              "query": [
+                {
+                  "key": "firstname",
+                  "value": "{{firstname}}"
+                },
+                {
+                  "key": "lastname",
+                  "value": "{{lastname}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update booking",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const booking = JSON.parse(pm.collectionVariables.get('booking'));",
+                  "booking.totalprice = 450;",
+                  "booking.depositpaid = false;",
+                  "",
+                  "pm.collectionVariables.set('updatedBooking', JSON.stringify(booking));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const sent = JSON.parse(pm.collectionVariables.get('updatedBooking'));",
+                  "const schema = JSON.parse(pm.collectionVariables.get('bookingSchema'));",
+                  "",
+                  "pm.test('responds 200 OK', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('matches the booking schema', function () {",
+                  "  pm.response.to.have.jsonSchema(schema);",
+                  "});",
+                  "",
+                  "pm.test('returns the updated booking', function () {",
+                  "  pm.expect(pm.response.json()).to.eql(sent);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Cookie",
+                "value": "token={{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{{updatedBooking}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/booking/{{bookingid}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking",
+                "{{bookingid}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Partially update booking",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responds 200 OK', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('changes only the first name', function () {",
+                  "  const booking = pm.response.json();",
+                  "  pm.expect(booking.firstname).to.eql('Patched');",
+                  "  pm.expect(booking.lastname).to.eql(pm.variables.get('lastname'));",
+                  "  pm.expect(booking.totalprice).to.eql(450);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Cookie",
+                "value": "token={{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstname\": \"Patched\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/booking/{{bookingid}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking",
+                "{{bookingid}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Reject an update without a token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responds 403 Forbidden', function () {",
+                  "  pm.response.to.have.status(403);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{{booking}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/booking/{{bookingid}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking",
+                "{{bookingid}}"
+              ]
+            },
+            "description": "The same payload as Update booking, minus the token cookie."
+          }
+        },
+        {
+          "name": "Delete booking",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('known defect: answers 201 Created on a delete', function () {",
+                  "  pm.response.to.have.status(201);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Cookie",
+                "value": "token={{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking/{{bookingid}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking",
+                "{{bookingid}}"
+              ]
+            },
+            "description": "A successful delete answers 201 Created instead of 200 OK or 204 No Content."
+          }
+        },
+        {
+          "name": "Confirm the booking is gone",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responds 404 Not Found', function () {",
+                  "  pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test('responds with a plain text reason', function () {",
+                  "  pm.expect(pm.response.text()).to.eql('Not Found');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/booking/{{bookingid}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking",
+                "{{bookingid}}"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
