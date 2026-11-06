@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Restful Booker API test reports</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #ffffff;
+        --fg: #1a1a1a;
+        --muted: #5c5c5c;
+        --border: #d8d8d8;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #15171a;
+          --fg: #e9e9e9;
+          --muted: #9a9a9a;
+          --border: #32353a;
+        }
+      }
+
+      body {
+        margin: 0 auto;
+        padding: 4rem 1.5rem;
+        max-width: 42rem;
+        background: var(--bg);
+        color: var(--fg);
+        font:
+          1rem/1.6 system-ui,
+          sans-serif;
+      }
+
+      h1 {
+        margin: 0 0 0.5rem;
+        font-size: 1.6rem;
+      }
+
+      p {
+        color: var(--muted);
+      }
+
+      ul {
+        margin-top: 2.5rem;
+        padding: 0;
+        list-style: none;
+      }
+
+      li + li {
+        margin-top: 1rem;
+      }
+
+      a {
+        display: block;
+        padding: 1.25rem;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        color: inherit;
+        text-decoration: none;
+      }
+
+      a:hover {
+        border-color: currentColor;
+      }
+
+      strong {
+        display: block;
+        font-size: 1.05rem;
+      }
+
+      span {
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
+      footer {
+        margin-top: 3rem;
+        font-size: 0.9rem;
+      }
+
+      footer a {
+        display: inline;
+        padding: 0;
+        border: 0;
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Restful Booker API test reports</h1>
+    <p>Published by GitHub Actions on every push to main.</p>
+
+    <ul>
+      <li>
+        <a href="newman/">
+          <strong>Newman</strong>
+          <span>Postman collection, run over the bookings data file</span>
+        </a>
+      </li>
+      <li>
+        <a href="playwright/">
+          <strong>Playwright</strong>
+          <span>Typed API tests, with traces on failure</span>
+        </a>
+      </li>
+    </ul>
+
+    <footer>
+      <a href="https://github.com/jokvir/api-testing-suite">Source on GitHub</a>
+    </footer>
+  </body>
+</html>
