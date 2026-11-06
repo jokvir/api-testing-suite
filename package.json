@@ -1,0 +1,52 @@
+{
+  "name": "api-testing-suite",
+  "version": "1.0.0",
+  "private": true,
+  "description": "API tests for Restful Booker: a Postman collection run with Newman and typed Playwright API tests",
+  "license": "MIT",
+  "author": "Shones Tegang (https://github.com/jokvir)",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "api:up": "docker compose up -d --wait",
+    "api:down": "docker compose down",
+    "test": "playwright test --project=local",
+    "test:smoke": "playwright test --project=local --grep @smoke",
+    "test:public": "playwright test --project=public",
+    "postman": "newman run postman/restful-booker.postman_collection.json -e postman/env/local.postman_environment.json -d postman/data/bookings.csv -r cli,htmlextra --reporter-htmlextra-export reports/newman/index.html",
+    "postman:public": "newman run postman/restful-booker.postman_collection.json -e postman/env/public.postman_environment.json -d postman/data/bookings.csv -r cli",
+    "verify": "npm run api:up && npm run postman && npm test",
+    "report": "playwright show-report",
+    "lint": "eslint . && prettier --check .",
+    "typecheck": "tsc --noEmit",
+    "schemas:check": "node scripts/check-schemas.mjs",
+    "format": "prettier --write ."
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@playwright/test": "1.65.0",
+    "@types/node": "24.19.0",
+    "ajv": "8.20.0",
+    "ajv-formats": "3.0.1",
+    "eslint": "10.14.0",
+    "eslint-config-prettier": "10.1.8",
+    "eslint-plugin-playwright": "2.12.0",
+    "newman": "6.2.3",
+    "newman-reporter-htmlextra": "1.23.1",
+    "prettier": "3.9.10",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.72.1"
+  },
+  "overrides": {
+    "flatted": "3.4.4",
+    "handlebars": "4.7.10",
+    "jose": "4.15.5",
+    "lodash": "4.18.1",
+    "minimatch": "11.0.5",
+    "node-forge": "1.4.3",
+    "qs": "6.17.1",
+    "underscore": "1.13.8"
+  }
+}

@@ -1,0 +1,4 @@
+package-lock.json
+
+# Owned by the Postman app: reformatting these would make every export fail lint.
+postman/
